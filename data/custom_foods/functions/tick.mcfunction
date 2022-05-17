@@ -14,4 +14,4 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 execute as @a[nbt={Inventory:[{id:"minecraft:axolotl_spawn_egg"}] }] run scoreboard players set @s CustomRecipes 1
-execute as @a if score @s CustomRecipes matches 1 run schedule function custom_foods:muffin 1t
+execute as @a if score @s CustomRecipes matches 1 run schedule function custom_foods:muffin 1s
