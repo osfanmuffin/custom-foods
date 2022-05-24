@@ -1,0 +1,105 @@
+name: Publish release
+on: 
+  #push:
+    #tags-ignore:
+     #- 'v*-beta*'
+  workflow_dispatch:
+jobs:
+   upload-normal:
+    name: Create non-optimized datapack
+    runs-on: ubuntu-latest
+    steps:
+     - name: Clone repository
+       uses: actions/checkout@v3
+       with:
+         fetch-depth: 0
+     - name: Check commands
+       uses: mcbeet/check-commands@v1.0.6
+       with:
+          source: .
+          minecraft: 1.18
+     - name: Check JSON
+       uses: ocular-d/json-linter@0.0.2
+     - name: Upload artifact
+       uses: actions/upload-artifact@v3
+       with:
+         path: |
+             assets/
+             data/
+             pack.mcmeta
+             pack.png
+         name: muffinhunt-datapack v2.0.0
+
+         
+   upload-optimized-datapack:
+    name: Optimize datapack
+    runs-on: ubuntu-latest
+    needs: upload-normal
+    steps:
+     - name: Download normal pack
+       uses: actions/download-artifact@v3
+       with:
+         name: muffinhunt-datapack v2.0.0
+         path: ./
+     - name: Run PackSquash
+       uses: ComunidadAylas/PackSquash-action@master
+       with:
+          path: ./
+          token: ${{ secrets.GITHUB_TOKEN }}
+          minify_json_files: true
+          validate_pack_metadata_file: true
+          allow_optifine_mod: true
+          delete_bloat_json_keys: true
+          artifact_name: 'optimized-muffinhunt-datapack v2.0.0'
+          never_store_squash_times: true
+
+
+   create-release:
+     name: Create release
+     needs: [upload-normal,upload-optimized-datapack]
+     runs-on: ubuntu-latest
+     steps:
+       - name: Checkout repo
+         uses: actions/checkout@v3
+         with:
+           token: ${{ secrets.GH_TOKEN }}
+       - name: Generate release changelog
+         uses: heinrichreimer/github-changelog-generator-action@v2.3
+         with:
+           token: ${{ secrets.GITHUB_TOKEN }}
+           dateFormat: '%m/%d/%Y'
+       - name: Download normal pack
+         uses: actions/download-artifact@v3
+         with:
+           name: muffinhunt-datapack v2.0.0
+       - name: Zip pack
+         run: |
+           zip 'muffinhunt-datapack v2.0.0' -r data pack.mcmeta pack.png
+       - name: Delete data folder
+         uses: JesseTG/rm@v1.0.2
+         with:
+           path: data/
+       - name: Download optimized pack
+         uses: actions/download-artifact@v3
+         with:
+           name: optimized-muffinhunt-datapack v2.0.0
+       - name: Zip pack
+         run: |
+           zip 'optimized-muffinhunt-datapack v2.0.0' -r data pack.mcmeta pack.png
+       - name: Release
+         uses: softprops/action-gh-release@v1
+         with:
+           files: |
+               muffinhunt-datapack v2.0.0.zip
+               optimized-muffinhunt-datapack v2.0.0.zip
+               muffinhunt-resourcepack v2.0.0.zip
+               optimized-muffinhunt-resourcepack v2.0.0.zip
+           body_path: CHANGELOG.md
+       - name: Commit changes
+         run: |
+            git config --local user.name "actions-user"
+            git config --local user.email "action@github.com"
+            git add CHANGELOG.md
+            git commit -m "[ci skip] Updated CHANGELOG.md for ${{ github.ref }}"
+            git push origin HEAD:master
+            
