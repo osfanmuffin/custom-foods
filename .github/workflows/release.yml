@@ -76,7 +76,7 @@ jobs:
          run: |
            zip 'muffinhunt-datapack v2.0.0' -r data pack.mcmeta pack.png
        - name: Delete data folder
-         uses: JesseTG/rm@v1.0.2
+         uses: JesseTG/rm@v1.0.3
          with:
            path: data/
        - name: Download optimized pack
