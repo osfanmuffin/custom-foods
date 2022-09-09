@@ -87,7 +87,7 @@ jobs:
          run: |
            zip 'optimized-muffinhunt-datapack v2.0.0-alpha1' -r data pack.mcmeta pack.png
        - name: Release
-         uses: softprops/action-gh-release@v0.1.14
+         uses: softprops/action-gh-release@v1
          with:
            files: |
                muffinhunt-datapack v2.0.0-alpha1.zip
